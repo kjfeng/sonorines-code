@@ -1,5 +1,6 @@
 # *****************************************************************************
 #  image_analyzer.py
+#  Usage: image_analyzer.py [sonorine_scan_path] [blank_card_path]
 #  Author: Kevin Feng
 #  Description:
 #   functions that work on analyzing the sonorine scans
@@ -11,29 +12,21 @@ import numpy as np
 from sys import argv, stderr, exit
 
 # divides card with blank sheet of paper
-def normalize_card(cardPath, blankPath):
-    # vectors is an array of 3D np vectors
+def normalize_card(cardStringPath, blankStringPath):
+    # cardPath and blankPath are strings
+    cardPath = r'{}'.format(cardStringPath)
+    blankPath = r'{}'.format(blankStringPath)
 
 
-    return medoid
+    return picture
 
 
 def main(argv):
-    # convert string args to floats
-    args = [float(arg) for arg in argv[1:]]
-    if len(args) % 3 != 0:
-        print("Enter coordinates in multiples of 3's to create 3D vector", file=stderr)
+    if len(args) != 2:
+        print("Usage: image_analyzer.py [sonorine_scan_path] [blank_card_path]", file=stderr)
         exit(1)
 
-    i = 0
 
-    vectors = []
-    while i < len(args):
-        vector = np.array([args[i], args[i+1], args[i+2]])
-        vectors.append(vector)
-        i += 3
-
-    print(getMedoid(vectors))
 
 
 # ----------------------------------------------------------------------------------
