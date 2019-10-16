@@ -15,24 +15,24 @@ def get_medoid(vectors):
         print("No vectors given", file=stderr)
         exit(1)
 
-    # vectorsNorm = [vector/np.linalg.norm(vector) for vector in vectors]
+    vectorsNorm = [vector/np.linalg.norm(vector) for vector in vectors]
 
     dottedSums = []
 
-    for i in range(len(vectors)):
-        if type(vectors[i]) is not np.ndarray:
+    for i in range(len(vectorsNorm)):
+        if type(vectorsNorm[i]) is not np.ndarray:
             print("Not a NumPy vector", file=stderr)
             exit(1)
-        if vectors[i].shape[0] != 3:
+        if vectorsNorm[i].shape[0] != 3:
             print("Not a 3D vector", file=stderr)
             exit(1)
 
         sum = 0
-        for j in range(len(vectors)):
-            sum += np.dot(vectors[i], vectors[j])
+        for j in range(len(vectorsNorm)):
+            sum += np.dot(vectorsNorm[i], vectorsNorm[j])
 
         # subtract dotted with itself
-        sum -= np.linalg.norm(vectors[i])
+        sum -= np.linalg.norm(vectorsNorm[i])
         dottedSums.append(sum)
 
     maxDottedSum = max(dottedSums)
