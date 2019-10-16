@@ -84,8 +84,9 @@ def main(argv):
         print("Usage: image_analyzer.py [sonorine_scan_path] [blank_card_path]", file=stderr)
         exit(1)
 
-        normalizedImg = normalize_card(args[0], args[1])
-        normalizedImg.show()
+    normalizedImg = normalize_card(args[0], args[1])
+    print('Normalized')
+    normalizedImg.show()
 
 
 # ----------------------------------------------------------------------------------
