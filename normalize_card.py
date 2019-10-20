@@ -1,6 +1,6 @@
 # *****************************************************************************
 #  image_analyzer.py
-#  Usage: image_analyzer.py [sonorine_scan_path] [blank_card_path] x 4
+#  Usage: image_analyzer.py [sonorine_scan_path] [blank_card_path] x 4 pairs
 #  Author: Kevin Feng
 #  Description:
 #   functions that work on analyzing the sonorine scans. RGB images only!
@@ -12,27 +12,37 @@ import numpy as np
 from sys import argv, stderr, exit
 # from PIL import Image
 
+# returns an RGB matrix of an image given its raw path
+def read_img(rawpath):
+    # img is a 3D numpy.ndarray: h x w x 3channels
+    img = cv2.imread(rawpath)
+    return img
+
 # converts a 3-channel rgb image to one-channel bw image
 # for use on the blank card images. Arg is RGB matrix
 def convert_to_bw(imageRGB):
+
     return
+
 # blurs image (also for use on blank card image)
 def blur(image):
     return
 
 # divides card with blank sheet of paper and returns new image
-def normalize_card(cardStringPath0, cardStringPath1, cardStringPath2, cardStringPath3, blankStringPath):
+def normalize_pair(cardStringPath, blankStringPath):
     # cardPath and blankPath are strings
     cardPath = r'{}'.format(cardStringPath)
     blankPath = r'{}'.format(blankStringPath)
 
-    card = Image.open(cardPath)
-    blank = Image.open(blankPath)
+    # outputs images as h x w x 3channels matrices
+    # shape outputs a tuple (h, w, c)
+    card = cv2.imread(cardPath)
+    blank = cv2.imread(blankPath)
 
     if card == None:
-        print("IOError: 1st image path cannot be opened", file=stderr)
+        print("IOError: sonorine image path cannot be opened", file=stderr)
     if blank == None:
-        print("IOError: 2nd image path cannot be opened", file=stderr)
+        print("IOError: blank card image path cannot be opened", file=stderr)
 
     if card.height != blank.height or card.width != blank.width:
         print("The two images need to be of the same size", file=stderr)
@@ -108,16 +118,38 @@ def normalize_card(cardStringPath0, cardStringPath1, cardStringPath2, cardString
 
     return newImg
 
+# scales single card upon determining the max calue across all channels and cards
+def scale_card(maxVal, image):
+    return
+
+# creates and returns new image
+def create_normalized_img(normalizedMatrix):
+
+
 
 def main(argv):
     args = argv[1:]
-    if len(args) != 5:
-        print("Usage: image_analyzer.py [sonorine_scan_path_0] [sonorine_scan_path_1] [sonorine_scan_path_2] [sonorine_scan_path_3] [blank_card_path]", file=stderr)
+    if len(args) != 8:
+        print("Usage: image_analyzer.py [4 pairs of sonorine<->blank card images]", file=stderr)
         exit(1)
+    # make array of raw string paths
+    paths = []
+    for arg in args:
+        paths.append(r'{}'.format(arg))
+    sonoImgs = []
+    blankImgs = []
+    for i in range(len(paths)):
+        img = cv2.imread(paths[i])
+        # evens = sonorine images
+        if i % 2 == 0:
+            sonoImgs.append(img)
+        else:
+            blankImgs.append(img)
 
-    normalizedImg = normalize_card(args[0], args[1], args[2], args[3], args[4])
-    print('Normalized')
-    normalizedImg.show()
+    
+
+
+
 
 
 # ----------------------------------------------------------------------------------
