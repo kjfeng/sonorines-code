@@ -10,25 +10,14 @@ import cv2
 import math
 import numpy as np
 from sys import argv, stderr, exit
-# from PIL import Image
+import time
 
-# returns an RGB matrix of an image given its raw path
-# def read_img(rawpath):
-#     # img is a 3D numpy.ndarray: h x w x 3channels
-#     img = cv2.imread(rawpath)
-#     return img
 
 # converts a 3-channel rgb image to one-channel bw image, and then duplicates gray color to all 3 channels
 # for use on the blank card images. Accepted argument is a RGB matrix
 def convert_to_bw(imageRGB):
     imgBW = cv2.cvtColor(imageRGB, cv2.COLOR_BGR2GRAY)
-    imgFullBW = np.zeros(shape=imageRGB.shape, dtype=np.uint8)
-    height = imageRGB.shape[0]
-    width = imageRGB.shape[1]
-    for y in range(height):
-        for x in range(width):
-            grayVal = imgBW[y][x]
-            imgFullBW[y][x] = [grayVal, grayVal, grayVal]
+    imgFullBW = np.repeat(imgBW[:, :, np.newaxis], 3, axis=2)
     return imgFullBW
 
 # blurs image (also for use on blank card image)
@@ -36,13 +25,10 @@ def convert_to_bw(imageRGB):
 def blur(image):
     return cv2.medianBlur(image, 5)
 
+
 # divides card with blank sheet of paper and returns normalized image
 def normalize_pair(sonoImg, blankImg):
-    return sonoImg / blankImg
-
-# scales single card upon determining the max calue across all channels and cards
-# def scale_card(maxVal, image):
-#     return image / maxVal
+    return (sonoImg / blankImg) * 255
 
 
 # takes an image matrix and displays image
@@ -69,6 +55,9 @@ def main(argv):
     #     exit(1)
     # make array of raw string paths
     paths = []
+
+    startTime = time.time()
+
     for arg in args:
         paths.append(r'{}'.format(arg))
     sonoImgs = []
@@ -95,17 +84,23 @@ def main(argv):
         print('lengths of sonorines array and blank array are different', file=stderr)
         exit(1)
 
-    normalizedImgs = []
 
     for i in range(len(sonoImgs)):
         blankBW = convert_to_bw(blankImgs[i])
         blankBlurred = cv2.medianBlur(blankBW, 5)
-        print(blankBlurred[1000][1000])
         normalized = normalize_pair(sonoImgs[i], blankBlurred)
-        normalized /= maxVal
-        normalizedImgs.append(normalized)
-    print(normalizedImgs[0][1000][1200])
-    # show_image(normalizedImgs[0])
+        normalized /= maxChamp
+        normalized *= 50
+
+        # VARIABLE DEPENDING ON USER'S COMPUTER
+        fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.png'
+        status = cv2.imwrite(fileString, normalized)
+        print('Normalized image ' + str(i) + ' written to file', status)
+
+
+    endTime = time.time()
+
+    print('Done! Time:', round(endTime - startTime, 2), 's')
 
 
 

@@ -30,9 +30,9 @@ def main(argv):
     args = argv[1:]
     rawpath = r'{}'.format(args[0])
     img = cv2.imread(rawpath)
-    print(type(img[0][0][0]))
     imgBlurred = cv2.medianBlur(img, 5)
-    # show_image(imgBlurred)
+    print(imgBlurred[1000][1300])
+    #show_image(imgBlurred)
 
 
 # ----------------------------------------------------------------------------------
