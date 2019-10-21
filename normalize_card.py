@@ -18,11 +18,18 @@ def read_img(rawpath):
     img = cv2.imread(rawpath)
     return img
 
-# converts a 3-channel rgb image to one-channel bw image
-# for use on the blank card images. Arg is RGB matrix
+# converts a 3-channel rgb image to one-channel bw image, and then duplicates gray color to all 3 channels
+# for use on the blank card images. Accepted argument is a RGB matrix
 def convert_to_bw(imageRGB):
-
-    return
+    imgBW = cv2.cvtColor(imageRGB, cv2.COLOR_BGR2GRAY)
+    imageFullBW = np.zeros(shape=imageRGB.shape)
+    height = imageRGB.shape[0]
+    width = imageRGB.shape[1]
+    for y in range(height):
+        for x in range(width):
+            grayVal = imgBW[y][x]
+            imageFullBW[y][x] = [gravVal, gravVal, grayVal]
+    return imgFullBW
 
 # blurs image (also for use on blank card image)
 def blur(image):
@@ -146,7 +153,13 @@ def main(argv):
         else:
             blankImgs.append(img)
 
-    
+    # test stmt
+    if len(sonoImgs) != len(blankImgs):
+        print('lengths of sonorines array and blank array are different', file=stderr)
+        exit(1)
+
+
+
 
 
 

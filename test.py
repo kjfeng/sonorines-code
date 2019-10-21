@@ -15,6 +15,7 @@ def main(argv):
     rawpath = r'{}'.format(args[0])
     img = cv2.imread(rawpath)
     print('shape of colour matrix is: ', img.shape)
+    print('rgb at 5, 5 is: ', img[2400][900])
     img_bw = cv2.imread(rawpath, 0)
     print('shape of bw matrix is: ', img_bw.shape)
 
