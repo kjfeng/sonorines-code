@@ -50,9 +50,9 @@ def show_image(img):
 
 def main(argv):
     args = argv[1:]
-    # if len(args) != 8:
-    #     print("Usage: image_analyzer.py [4 pairs of sonorine<->blank card images]", file=stderr)
-    #     exit(1)
+    if len(args) != 8:
+        print("Usage: image_analyzer.py [4 pairs of sonorine<->blank card images]", file=stderr)
+        exit(1)
     # make array of raw string paths
     paths = []
 
