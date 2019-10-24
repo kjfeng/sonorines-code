@@ -50,9 +50,9 @@ def show_image(img):
 
 def main(argv):
     args = argv[1:]
-    if len(args) != 8:
-        print("Usage: image_analyzer.py [4 pairs of sonorine<->blank card images]", file=stderr)
-        exit(1)
+    # if len(args) != 8:
+    #     print("Usage: image_analyzer.py [4 pairs of sonorine<->blank card images]", file=stderr)
+    #     exit(1)
     # make array of raw string paths
     paths = []
 
@@ -90,7 +90,8 @@ def main(argv):
         blankBlurred = cv2.medianBlur(blankBW, 5)
         normalized = normalize_pair(sonoImgs[i], blankBlurred)
         normalized /= maxChamp
-        normalized *= 50
+
+        normalized *= 255
 
         # VARIABLE DEPENDING ON USER'S COMPUTER
         fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.png'
