@@ -38,6 +38,52 @@ def convertTo16(img):
     img16 *= 256
     return img16
 
+# takes an array of paths of the form [sono_img] [blank_img] ... and returns an array of
+# normalized sonorine images
+def normalize_all(paths):
+    sonoImgs = []
+    blankImgs = []
+    maxChamp = 0
+    for i in range(len(paths)):
+        img8 = cv2.imread(paths[i])
+        # img = cv2.imread(paths[i])
+
+        if img8.any() == None:
+        # if img.any() == None:
+            print('image', i, 'cannot be read!', file=stderr)
+            exit(1)
+
+        img = convertTo16(img8)
+
+        maxVal = img.max()
+        if maxVal > maxChamp:
+            maxChamp = maxVal
+        # evens = sonorine images
+        if i % 2 == 0:
+            sonoImgs.append(img)
+        else:
+            blankImgs.append(img)
+
+    # test stmt
+    if len(sonoImgs) != len(blankImgs):
+        print('lengths of sonorines array and blank array are different', file=stderr)
+        exit(1)
+
+    finalImgs = []
+    for i in range(len(sonoImgs)):
+        blankBW = convert_to_bw(blankImgs[i])
+        blankBlurred = cv2.medianBlur(blankBW, 5)
+        normalized = normalize_pair(sonoImgs[i], blankBlurred)
+        normalized /= maxChamp
+        normalized *= 65535
+        # normalized *= 255
+        # norm32 = normalized.astype('uint16') * 65535
+        normRounded = normalized.astype('uint16')
+        normBW = cv2.cvtColor(normRounded, cv2.COLOR_BGR2GRAY)
+        finalImgs.append(normBW)
+
+    return finalImgs
+
 # takes an image matrix and displays image
 def show_image(img):
     screen_res = 1280, 720
@@ -68,51 +114,13 @@ def main(argv):
 
     for arg in args:
         paths.append(r'{}'.format(arg))
-    sonoImgs = []
-    blankImgs = []
-    maxChamp = 0
-    for i in range(len(paths)):
-        img8 = cv2.imread(paths[i])
-        # img = cv2.imread(paths[i])
+    finalImgs = normalize_all(paths)
 
-        print(paths[i])
-        if img8.any() == None:
-        # if img.any() == None:
-            print('image', i, 'cannot be read!', file=stderr)
-            exit(1)
-
-        img = convertTo16(img8)
-
-        maxVal = img.max()
-        if maxVal > maxChamp:
-            maxChamp = maxVal
-        # evens = sonorine images
-        if i % 2 == 0:
-            sonoImgs.append(img)
-        else:
-            blankImgs.append(img)
-
-    # test stmt
-    if len(sonoImgs) != len(blankImgs):
-        print('lengths of sonorines array and blank array are different', file=stderr)
-        exit(1)
-
-
-    for i in range(len(sonoImgs)):
-        blankBW = convert_to_bw(blankImgs[i])
-        blankBlurred = cv2.medianBlur(blankBW, 5)
-        normalized = normalize_pair(sonoImgs[i], blankBlurred)
-        normalized /= maxChamp
-        # normalized *= 255
-        # norm32 = normalized.astype('uint16') * 65535
-
-        normRounded = normalized.astype('uint16')
-        normRounded *= 65535
-        normBW = cv2.cvtColor(normRounded, cv2.COLOR_BGR2GRAY)
+    for i in range(len(finalImgs)):
 
         # VARIABLE DEPENDING ON USER'S COMPUTER
         fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.tiff'
-        status = cv2.imwrite(fileString, normBW)
+        status = cv2.imwrite(fileString, finalImgs[i])
         print('Normalized image ' + str(i) + ' written to file', status)
 
 
