@@ -107,7 +107,7 @@ def main(argv):
     #     print("Usage: image_analyzer.py [4 pairs of sonorine<->blank card images]", file=stderr)
     #     exit(1)
 
-    # make array of raw string paths
+    # array of raw string paths
     paths = []
 
     startTime = time.time()
