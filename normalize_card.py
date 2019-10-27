@@ -28,8 +28,8 @@ def convert_to_bw(imageRGB):
 
 # divides card with blank sheet of paper and returns normalized image
 def normalize_pair(sonoImg, blankImg):
-    # return (sonoImg / blankImg) * 65535
-    return (sonoImg / blankImg) * 255
+    return (sonoImg / blankImg) * 65535
+    # return (sonoImg / blankImg) * 255
 
 # converts input image (8-bit) into 16-bit
 def convertTo16(img):
@@ -72,16 +72,16 @@ def main(argv):
     blankImgs = []
     maxChamp = 0
     for i in range(len(paths)):
-        # img8 = cv2.imread(paths[i])
-        img = cv2.imread(paths[i])
+        img8 = cv2.imread(paths[i])
+        # img = cv2.imread(paths[i])
 
         print(paths[i])
-        # if img8.any() == None:
-        if img.any() == None:
+        if img8.any() == None:
+        # if img.any() == None:
             print('image', i, 'cannot be read!', file=stderr)
             exit(1)
 
-        # img = convertTo16(img8)
+        img = convertTo16(img8)
 
         maxVal = img.max()
         if maxVal > maxChamp:
@@ -104,15 +104,15 @@ def main(argv):
         normalized = normalize_pair(sonoImgs[i], blankBlurred)
         normalized /= maxChamp
         # normalized *= 255
-        norm32 = normalized.astype('uint16') * 65535
+        # norm32 = normalized.astype('uint16') * 65535
 
-        # normRounded = normalized.astype('uint16')
-        # normRounded *= 65535
-        # normBW = cv2.cvtColor(normRounded, cv2.COLOR_BGR2GRAY)
+        normRounded = normalized.astype('uint16')
+        normRounded *= 65535
+        normBW = cv2.cvtColor(normRounded, cv2.COLOR_BGR2GRAY)
 
         # VARIABLE DEPENDING ON USER'S COMPUTER
         fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.tiff'
-        status = cv2.imwrite(fileString, norm32)
+        status = cv2.imwrite(fileString, normBW)
         print('Normalized image ' + str(i) + ' written to file', status)
 
 
