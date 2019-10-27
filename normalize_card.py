@@ -22,14 +22,21 @@ def convert_to_bw(imageRGB):
 
 # blurs image (also for use on blank card image)
 # arg is 3channel image matrix
-def blur(image):
-    return cv2.medianBlur(image, 5)
+# def blur(image):
+#     return cv2.medianBlur(image, 5)
 
 
 # divides card with blank sheet of paper and returns normalized image
 def normalize_pair(sonoImg, blankImg):
+    # return (sonoImg / blankImg) * 65535
     return (sonoImg / blankImg) * 255
 
+# converts input image (8-bit) into 16-bit
+def convertTo16(img):
+    # img16 = np.array(img, dtype=np.uint16)
+    img16 = img.astype('uint16')
+    img16 *= 256
+    return img16
 
 # takes an image matrix and displays image
 def show_image(img):
@@ -53,6 +60,7 @@ def main(argv):
     # if len(args) != 8:
     #     print("Usage: image_analyzer.py [4 pairs of sonorine<->blank card images]", file=stderr)
     #     exit(1)
+
     # make array of raw string paths
     paths = []
 
@@ -64,11 +72,16 @@ def main(argv):
     blankImgs = []
     maxChamp = 0
     for i in range(len(paths)):
+        # img8 = cv2.imread(paths[i])
         img = cv2.imread(paths[i])
+
         print(paths[i])
+        # if img8.any() == None:
         if img.any() == None:
             print('image', i, 'cannot be read!', file=stderr)
             exit(1)
+
+        # img = convertTo16(img8)
 
         maxVal = img.max()
         if maxVal > maxChamp:
@@ -90,12 +103,16 @@ def main(argv):
         blankBlurred = cv2.medianBlur(blankBW, 5)
         normalized = normalize_pair(sonoImgs[i], blankBlurred)
         normalized /= maxChamp
+        # normalized *= 255
+        norm32 = normalized.astype('uint16') * 65535
 
-        normalized *= 255
+        # normRounded = normalized.astype('uint16')
+        # normRounded *= 65535
+        # normBW = cv2.cvtColor(normRounded, cv2.COLOR_BGR2GRAY)
 
         # VARIABLE DEPENDING ON USER'S COMPUTER
-        fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.png'
-        status = cv2.imwrite(fileString, normalized)
+        fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.tiff'
+        status = cv2.imwrite(fileString, norm32)
         print('Normalized image ' + str(i) + ' written to file', status)
 
 

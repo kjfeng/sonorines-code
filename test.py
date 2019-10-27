@@ -30,9 +30,12 @@ def main(argv):
     args = argv[1:]
     rawpath = r'{}'.format(args[0])
     img = cv2.imread(rawpath)
-    imgBlurred = cv2.medianBlur(img, 5)
-    print(imgBlurred[1000][1300])
-    #show_image(imgBlurred)
+    # img16 = np.array(img, dtype=np.uint16)
+    img16 = img.astype('uint16')
+    img16 *= 256
+    print(img16.dtype)
+    status = cv2.imwrite('test.tiff', img16)
+    print('Test image written to file', status)
 
 
 # ----------------------------------------------------------------------------------
