@@ -9,7 +9,23 @@ import cv2
 import math
 import numpy as np
 from sys import argv, stderr, exit
+import time
 
+
+# converts a 3-channel rgb image to one-channel bw image, and then duplicates gray color to all 3 channels
+# for use on the blank card images. Accepted argument is a RGB matrix
+def convert_to_bw(imageRGB):
+    imgBW = cv2.cvtColor(imageRGB, cv2.COLOR_BGR2GRAY)
+    imgFullBW = np.repeat(imgBW[:, :, np.newaxis], 3, axis=2)
+    return imgFullBW
+
+
+# divides card with blank sheet of paper and returns normalized image
+def normalize_pair(sonoImg, blankImg):
+    return (sonoImg / blankImg) * 255
+
+
+# takes an image matrix and displays image
 def show_image(img):
     screen_res = 1280, 720
     scale_width = screen_res[0] / img.shape[1]
@@ -25,17 +41,71 @@ def show_image(img):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+def normalize_all(paths):
+    sonoImgs = []
+    blankImgs = []
+    maxChamp = 0
+    for i in range(len(paths)):
+        img = cv2.imread(paths[i])
+        print(paths[i])
+        if img.any() == None:
+            print('image', i, 'cannot be read!', file=stderr)
+            exit(1)
+
+        maxVal = img.max()
+        if maxVal > maxChamp:
+            maxChamp = maxVal
+        # evens = sonorine images
+        if i % 2 == 0:
+            sonoImgs.append(img)
+        else:
+            blankImgs.append(img)
+
+    # test stmt
+    if len(sonoImgs) != len(blankImgs):
+        print('lengths of sonorines array and blank array are different', file=stderr)
+        exit(1)
+
+
+    finalImgs = []
+    for i in range(len(sonoImgs)):
+        blankBW = convert_to_bw(blankImgs[i])
+        blankBlurred = cv2.medianBlur(blankBW, 5)
+        normalized = normalize_pair(sonoImgs[i], blankBlurred) / maxChamp
+        normalized *= 255
+        normalized = normalized.astype('float32')
+        normalized = cv2.cvtColor(normalized, cv2.COLOR_BGR2GRAY)
+
+        finalImgs.append(normalized)
+
+    return finalImgs
+
+
 
 def main(argv):
     args = argv[1:]
-    rawpath = r'{}'.format(args[0])
-    img = cv2.imread(rawpath)
-    # img16 = np.array(img, dtype=np.uint16)
-    img16 = img.astype('uint16')
-    img16 *= 256
-    print(img16.dtype)
-    status = cv2.imwrite('test.tiff', img16)
-    print('Test image written to file', status)
+    # if len(args) != 8:
+    #     print("Usage: image_analyzer.py [4 pairs of sonorine<->blank card images]", file=stderr)
+    #     exit(1)
+    # make array of raw string paths
+    paths = []
+
+    startTime = time.time()
+
+    for arg in args:
+        paths.append(r'{}'.format(arg))
+    finalImgs = normalize_all(paths)
+
+    for i in range(len(finalImgs)):
+        # VARIABLE DEPENDING ON USER'S COMPUTER
+        fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.png'
+        status = cv2.imwrite(fileString, finalImgs[i])
+        print('Normalized image ' + str(i) + ' written to file', status)
+
+    endTime = time.time()
+
+    print('Done! Time:', round(endTime - startTime, 2), 's')
+
 
 
 # ----------------------------------------------------------------------------------
