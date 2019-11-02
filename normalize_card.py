@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # *****************************************************************************
 #  normalize_card.py
 #  Usage:
@@ -48,7 +50,6 @@ def normalize_all(paths):
     maxChamp = 0
     for i in range(len(paths)):
         img = cv2.imread(paths[i])
-        print(paths[i])
         if img.any() == None:
             print('image', i, 'cannot be read!', file=stderr)
             exit(1)
