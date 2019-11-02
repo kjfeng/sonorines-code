@@ -11,7 +11,6 @@ import math
 import numpy as np
 from sys import argv, stderr, exit
 import time
-from matplotlib import pyplot as plt
 
 
 # converts a 3-channel rgb image to one-channel bw image, and then duplicates gray color to all 3 channels
@@ -79,7 +78,7 @@ def normalize_all(paths):
         normalized *= 65535
         # normalized *= 255
         # norm32 = normalized.astype('uint16') * 65535
-        normRounded = normalized.astype('uint16')
+        normRounded = normalized.astype('float32')
         normBW = cv2.cvtColor(normRounded, cv2.COLOR_BGR2GRAY)
         finalImgs.append(normBW)
 
