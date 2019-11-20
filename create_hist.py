@@ -11,7 +11,7 @@ import numpy as np
 from sys import argv, stderr, exit
 from matplotlib import pyplot as plt
 
-def create_hist(img):
+def create_hist_from_img(img):
     plt.hist(img.ravel(),256,[0,256])
     plt.show()
 
@@ -24,7 +24,7 @@ def main(argv):
     img = cv2.imread(rawpath, 0)
 
     # find histogram using numpy.ravel()
-    create_hist(img)
+    create_hist_from_img(img)
 
 
 

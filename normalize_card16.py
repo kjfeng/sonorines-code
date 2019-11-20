@@ -3,7 +3,7 @@
 #  Usage: image_analyzer.py [sonorine_scan_path] [blank_card_path] x 4 pairs
 #  Author: Kevin Feng
 #  Description:
-#   functions that work on analyzing the sonorine scans. RGB images only!
+#   normalizes and visualizes 16-bit sonorine scans. RGB images only!
 # *****************************************************************************
 
 import cv2
@@ -20,44 +20,26 @@ def convert_to_bw(imageRGB):
     imgFullBW = np.repeat(imgBW[:, :, np.newaxis], 3, axis=2)
     return imgFullBW
 
-# blurs image (also for use on blank card image)
-# arg is 3channel image matrix
-# def blur(image):
-#     return cv2.medianBlur(image, 5)
-
 
 # divides card with blank sheet of paper and returns normalized image
 def normalize_pair(sonoImg, blankImg):
     return (sonoImg / blankImg) * 65535
-    # return (sonoImg / blankImg) * 255
-
-# converts input image (8-bit) into 16-bit
-def convertTo16(img):
-    # img16 = np.array(img, dtype=np.uint16)
-    img16 = img.astype('uint16')
-    img16 *= 256
-    return img16
 
 # takes an array of paths of the form [sono_img] [blank_img] ... and returns an array of
 # normalized sonorine images
 def normalize_all(paths):
     sonoImgs = []
     blankImgs = []
+    # highest r/g/b value across all sono images
     maxChamp = 0
     for i in range(len(paths)):
-        img8 = cv2.imread(paths[i])
-        # img = cv2.imread(paths[i])
+        img = cv2.imread(paths[i], -1)
 
-        if img8.any() == None:
-        # if img.any() == None:
+        if img.any() == None:
             print('image', i, 'cannot be read!', file=stderr)
             exit(1)
 
-        img = convertTo16(img8)
 
-        maxVal = img.max()
-        if maxVal > maxChamp:
-            maxChamp = maxVal
         # evens = sonorine images
         if i % 2 == 0:
             sonoImgs.append(img)
@@ -69,36 +51,29 @@ def normalize_all(paths):
         print('lengths of sonorines array and blank array are different', file=stderr)
         exit(1)
 
+    normed = []
     finalImgs = []
+
     for i in range(len(sonoImgs)):
         blankBW = convert_to_bw(blankImgs[i])
         blankBlurred = cv2.medianBlur(blankBW, 5)
         normalized = normalize_pair(sonoImgs[i], blankBlurred)
-        normalized /= maxChamp
-        normalized *= 65535
-        # normalized *= 255
-        # norm32 = normalized.astype('uint16') * 65535
-        normRounded = normalized.astype('float32')
-        normBW = cv2.cvtColor(normRounded, cv2.COLOR_BGR2GRAY)
+        normed.append(normalized)
+        maxVal = normalized.max()
+        if maxVal > maxChamp:
+            maxChamp = maxVal
+
+    for i in range(len(normed)):
+        normed[i] /= maxChamp
+        normed[i] *= 65535
+        # normalized /= maxChamp
+        # print(normalized.max())
+        # normalized *= 65535
+        #normRounded = normalized.astype('float16')
+        normBW = cv2.cvtColor(np.uint16(normed[i]), cv2.COLOR_BGR2GRAY)
         finalImgs.append(normBW)
 
     return finalImgs
-
-# takes an image matrix and displays image
-def show_image(img):
-    screen_res = 1280, 720
-    scale_width = screen_res[0] / img.shape[1]
-    scale_height = screen_res[1] / img.shape[0]
-    scale = min(scale_width, scale_height)
-    window_width = int(img.shape[1] * scale)
-    window_height = int(img.shape[0] * scale)
-
-    cv2.namedWindow('dst_rt', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('dst_rt', window_width, window_height)
-
-    cv2.imshow('dst_rt', img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
 
 def main(argv):
@@ -119,7 +94,7 @@ def main(argv):
     for i in range(len(finalImgs)):
 
         # VARIABLE DEPENDING ON USER'S COMPUTER
-        fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.tiff'
+        fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.tif'
         status = cv2.imwrite(fileString, finalImgs[i])
         print('Normalized image ' + str(i) + ' written to file', status)
 

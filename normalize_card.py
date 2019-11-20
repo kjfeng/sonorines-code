@@ -13,6 +13,7 @@ import math
 import numpy as np
 from sys import argv, stderr, exit
 import time
+from create_hist import create_hist_from_img
 
 
 # converts a 3-channel rgb image to one-channel bw image, and then duplicates gray color to all 3 channels
@@ -54,7 +55,7 @@ def normalize_all(paths):
             print('image', i, 'cannot be read!', file=stderr)
             exit(1)
 
-        maxVal = img.max()
+        maxVal = np.max(img)
         if maxVal > maxChamp:
             maxChamp = maxVal
         # evens = sonorine images
@@ -78,10 +79,73 @@ def normalize_all(paths):
         normalized = normalized.astype('float32')
         normBW = cv2.cvtColor(normalized, cv2.COLOR_BGR2GRAY)
 
+        # one-channel bw images (2D arrays)
         finalImgs.append(normBW)
 
     return finalImgs
 
+def scale_to_pos(img):
+    newImg = img
+    min = np.min(newImg)
+    if min < 0:
+        deficit = 0 - min
+        newImg += deficit
+    # scales entire img to 0-255
+    max = np.max(newImg)
+    ratio = 255 / max
+    newImg /= ratio
+
+    return newImg
+
+def visulize_by_HSV(finalImgs):
+    if len(finalImgs) != 4:
+        print("Error:", len(finalImgs), "images were normalized, not 4.", file=stderr)
+    imgNW = finalImgs[0]
+    imgNE = finalImgs[1]
+    imgSW = finalImgs[2]
+    imgSE = finalImgs[3]
+
+    height = imgNW.shape[0]
+    width = imgNW.shape[1]
+
+    da = imgNW - imgSE
+    db = imgNE - imgSW
+    magnitudes = np.sqrt(da*da + db*db)
+
+    maxDa = np.amax(imgNW, axis=2) - np.amin(imgSE, axis=2)
+    maxDb = np.amax(imgNE, axis=2) - np.amin(imgSW, axis=2)
+    maxMagnitude = np.sqrt(maxDa*maxDa + maxDb*maxDb)
+
+    # a_scaled = scale_to_pos(da)
+    # b_scaled = scale_to_pos(db)
+
+    x1 = 1
+    y1 = 0
+    x2 = da
+    y2 = db
+
+    dot = x1*x2 + y1*y2
+    det = x1*y2 - y1*x2
+    angleRad = math.atan2(det, dot)
+
+    if angleRad < 0:
+        diff = 2 * math.pi + angleRad
+        angleRad = diff
+
+    angleDeg = angleRad * 180 / math.pi
+
+    h = angle * 360/179
+    s = magnitudes * 255/maxMagnitude
+    v = np.full((height, width), 0.75 * 255)
+
+    # create new h x w ndarray, convert to hsv colourspace, insert hsv??
+    newImg = np.zeros((height, width, 3))
+    hsvImg = cv2.cvtColor(newImg, cv2.COLOR_BGR2HSV)
+    hsvImg[:, :, 0] += h
+    hsvImg[:, :, 1] += s
+    hsvImg[:, :, 2] += v
+
+    return hsvImg
 
 
 def main(argv):
@@ -97,6 +161,7 @@ def main(argv):
     for arg in args:
         paths.append(r'{}'.format(arg))
     finalImgs = normalize_all(paths)
+
 
     for i in range(len(finalImgs)):
         # VARIABLE DEPENDING ON USER'S COMPUTER
