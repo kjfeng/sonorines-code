@@ -254,7 +254,7 @@ class Light:
         normal = []
         for cx, cy, r in self.ball:
             nx = (self.highlight[count][0] - cx) / r
-            ny = (self.highlight[count][1] - cy) / r
+            ny = (self.highlight[count][1] - cy) / r 
             # print("NX", nx, "\nNY", ny)
             #nz = math.sqrt(1 - (nx)**2 - (ny)**2)
             nz = (self.highlight[count][2] - r) / r

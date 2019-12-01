@@ -26,7 +26,7 @@ def read_csv_file():
                 # print(f'Odd Column', row)
                 # print('cx:', row[0], 'cy:', row[1], 'r:', row[2])
                 line_count += 1
-            else:
+            else: 
                 arr_hl.append(row)
                 # print(f'Even Column', row)
                 # print('hx:', row[0], 'hy:', row[1])
