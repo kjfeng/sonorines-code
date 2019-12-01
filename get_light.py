@@ -26,12 +26,12 @@ def read_csv_file():
                 # print(f'Odd Column', row)
                 # print('cx:', row[0], 'cy:', row[1], 'r:', row[2])
                 line_count += 1
-            else: 
+            else:
                 arr_hl.append(row)
                 # print(f'Even Column', row)
                 # print('hx:', row[0], 'hy:', row[1])
                 line_count += 1
-    print(f'function read_file processed {line_count} lines.')
+    print(f'csv file reader processed {line_count} lines.')
     return arr_xyr, arr_hl
 
 # finds the 16 light directions associated with the 16 balls
