@@ -39,7 +39,6 @@ def normalize_all(paths):
             print('image', i, 'cannot be read!', file=stderr)
             exit(1)
 
-
         # evens = sonorine images
         if i % 2 == 0:
             sonoImgs.append(img)
@@ -57,23 +56,77 @@ def normalize_all(paths):
     for i in range(len(sonoImgs)):
         blankBW = convert_to_bw(blankImgs[i])
         blankBlurred = cv2.medianBlur(blankBW, 5)
-        normalized = normalize_pair(sonoImgs[i], blankBlurred)
+        normalized = normalize_pair(convert_to_bw(sonoImgs[i]), blankBlurred)
         normed.append(normalized)
-        maxVal = normalized.max()
-        if maxVal > maxChamp:
-            maxChamp = maxVal
+        # maxVal = normalized.max()
+        # if maxVal > maxChamp:
+        #     maxChamp = maxVal
+        stackedImgs = np.array(normed)
+
+    # find percentiles
+    p4 = np.percentile(stackedImgs, 4)
+    p96 = np.percentile(stackedImgs, 96)
 
     for i in range(len(normed)):
-        normed[i] /= maxChamp
-        normed[i] *= 65535
-        # normalized /= maxChamp
-        # print(normalized.max())
-        # normalized *= 65535
-        #normRounded = normalized.astype('float16')
-        normBW = cv2.cvtColor(np.uint16(normed[i]), cv2.COLOR_BGR2GRAY)
+        clipped = np.clip(normed[i], p4, p96)
+        min = clipped.min()
+        max = clipped.max()
+        # get smallest element to 0
+        # clipped -= min
+        rescaled = (clipped - min) / (max - min) * 65535
+        normBW = cv2.cvtColor(np.float32(rescaled), cv2.COLOR_BGR2GRAY)
         finalImgs.append(normBW)
 
     return finalImgs
+
+def visulize_by_HSV(finalImgs):
+    if len(finalImgs) != 4:
+        print("Error:", len(finalImgs), "images were normalized, not 4.", file=stderr)
+    imgNW = finalImgs[0]
+    imgNE = finalImgs[1]
+    imgSW = finalImgs[2]
+    imgSE = finalImgs[3]
+
+    height = imgNW.shape[0]
+    width = imgNW.shape[1]
+
+    da = imgNW - imgSE
+    db = imgNE - imgSW
+    magnitudes = np.sqrt(da*da + db*db)
+
+    maxDa = np.amax(imgNW, axis=1) - np.amin(imgSE, axis=1)
+    maxDb = np.amax(imgNE, axis=1) - np.amin(imgSW, axis=1)
+    maxMagnitude = np.sqrt(maxDa*maxDa + maxDb*maxDb)
+
+    # a_scaled = scale_to_pos(da)
+    # b_scaled = scale_to_pos(db)
+
+    # da shape is (1200, 1200)
+
+    x1 = np.full(da.shape, 1)
+    y1 = np.full(da.shape, 0)
+    x2 = da
+    y2 = db
+
+    dot = x1*x2 + y1*y2
+    det = x1*y2 - y1*x2
+    angleRad = np.arctan2(det, dot)
+
+    if angleRad.min() < 0:
+        angleRad -= angleRad.min()  # add the deficit so min is 0
+        # diff = 2 * math.pi + angleRad
+        # angleRad = diff
+
+    angleDeg = angleRad * 180 / math.pi
+
+    h = angleDeg * 179/angleDeg.max()
+    s = magnitudes * 255/maxMagnitude
+    v = np.full((height, width), 0.75 * 255)
+
+    newImg = colourImg = np.stack((h, s, v), axis=2)
+    hsvImg = cv2.cvtColor(np.uint8(newImg), cv2.COLOR_BGR2HSV)
+
+    return hsvImg
 
 
 def main(argv):
@@ -91,12 +144,16 @@ def main(argv):
         paths.append(r'{}'.format(arg))
     finalImgs = normalize_all(paths)
 
-    for i in range(len(finalImgs)):
+    # hsvImg = visulize_by_HSV(finalImgs)
 
-        # VARIABLE DEPENDING ON USER'S COMPUTER
+    for i in range(len(finalImgs)):
         fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/normalized' + str(i) + '.tif'
         status = cv2.imwrite(fileString, finalImgs[i])
         print('Normalized image ' + str(i) + ' written to file', status)
+
+    # fileString = '/Users/feng/Documents/Kevin/Pton/Classes/cos-iw/sonorines-code/images/hsv.tif'
+    # status = cv2.imwrite(fileString, hsvImg)
+    # print('HSV image written to file:', status)
 
 
     endTime = time.time()

@@ -12,6 +12,7 @@ import imutils
 import linvpy as lp
 import math
 import itertools
+import csv
 from sympy import symbols, solve
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -110,7 +111,7 @@ class DetectEllipse:
             numb+=1
 
         #print('ellipses:',self.ellipses)
-        print('degrees of rotation: ',self.degrees)
+        # print('degrees of rotation: ',self.degrees)
         points = self.get_center(self.ellipses)
         return points, self.degrees, self.centers
 
@@ -162,18 +163,22 @@ class Light:
         #organize the highlight coord to correspond to the ball coord in index i, and calculate hz
         for cx, cy, r in self.ball:
             for hx, hy in HLCoord:#HLCoord
-                if cx + r > hx > cx - r and cy + r > hy > cy - r:
-                    coeff = [1, -2 * r, (hx - cx)**2 + (hy - cy)**2]
-                    print("\nsphere coord:", [cx, cy, r])
-                    print("highlight coord:", [hx, hy])
-                    H = np.roots(coeff)
-                    if 2 * r > H[0] > r:
-                        self.highlight.append([hx, hy, H[0]])
-                        print("hz is", H[0])
-                    else:
-                        self.highlight.append([hx, hy, H[1]])
-                        print("hz is", H[1])
-
+                with open('info.csv', mode='a') as info_file:
+                    info_writer = csv.writer(info_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    if cx + r > hx > cx - r and cy + r > hy > cy - r:
+                        coeff = [1, -2 * r, (hx - cx)**2 + (hy - cy)**2]
+                        info_writer.writerow((cx, cy, r))
+                        info_writer.writerow((hx, hy))
+                        print([cx, cy, r])
+                        print("highlight coord:", [hx, hy])
+                        H = np.roots(coeff)
+                        if 2 * r > H[0] > r:
+                            self.highlight.append([hx, hy, H[0]])
+                            # print("hz is", H[0])
+                        else:
+                            self.highlight.append([hx, hy, H[1]])
+                            # print("hz is", H[1])
+        print('\nball and highlight info written!')
 
         self.degrees = []
         #find the degree of rotation of each ellipse that surrounds the shadows
@@ -210,7 +215,7 @@ class Light:
             theta = math.degrees(theta)
 
             #check to see if different methods result in the same theta
-            print('hl: ', hl, ' theta:', theta, ' <vs> ', theta1)
+            # print('hl: ', hl, ' theta:', theta, ' <vs> ', theta1)
             phi = 2*theta
             phi = math.radians(phi)
             z = (2*rad)/math.cos(phi)
@@ -219,7 +224,7 @@ class Light:
             x = (rad + rad*math.cos(phi))/math.tan(phi)
             y = x + rad*math.sin(phi)
 
-            print('X ',x, 'Y ', y, 'Z', z)
+            # print('X ',x, 'Y ', y, 'Z', z)
             self.ellipse_coord.append([cx-(z-rad), cy-rad, z, 2*rad]) #(top left coord, width, height) given #reverse signs if the shadow is to the right
     ####EDIT
     def recal_hl_pos(self, shadow_width, radius):
@@ -233,7 +238,7 @@ class Light:
         return hz
 
     def get_ellipse_centers(self):
-        print('ELLIPSE COORDS',self.ellipse_coord)
+        # print('ELLIPSE COORDS',self.ellipse_coord)
         return self.ellipse_coord, self.degrees, self.highlight #self.ellipse_pts, self.ellipse_degrees, self.centers
 
     def alterCoordinateSystem(self, oldX, oldY):
@@ -250,7 +255,7 @@ class Light:
         for cx, cy, r in self.ball:
             nx = (self.highlight[count][0] - cx) / r
             ny = (self.highlight[count][1] - cy) / r
-            print("NX", nx, "\nNY", ny)
+            # print("NX", nx, "\nNY", ny)
             #nz = math.sqrt(1 - (nx)**2 - (ny)**2)
             nz = (self.highlight[count][2] - r) / r
             #ex: NX 0.24511514751050714 NY -5.8729478316518575
@@ -272,21 +277,21 @@ class Light:
             for N in self.norm:
                 u = np.cross(N, [1,0,0])
                 v = np.cross(N, u)
-                print("\nN", N)
-                print("ui", u)
-                print("vi", v)
+                # print("\nN", N)
+                # print("ui", u)
+                # print("vi", v)
                 A.append(u)
                 A.append(v)
                 h = [self.highlight[count][0], self.highlight[count][1], self.highlight[count][2]]
-                print("h", h)
+                # print("h", h)
                 B.append([np.dot(u, h)])
                 B.append([np.dot(v, h)])
                 count += 1
 
-        print("\nA", A)
-        print("B", B)
+        # print("\nA", A)
+        # print("B", B)
         L = np.linalg.lstsq(A, B, rcond=None)[0]
-        print("\nL", L)
+        # print("\nL", L)
 
         self.lightPos = L
 
@@ -309,8 +314,8 @@ class Light:
                 lh = [lh[0][0], lh[1][0], lh[2][0]]
                 err = np.dot(lh, u) + np.dot(lh, v)
 
-                print("l - h", lh)
-                print("\nERROR:", err)
+                # print("l - h", lh)
+                # print("\nERROR:", err)
 
                 errors.append(err)
 
@@ -318,13 +323,13 @@ class Light:
                     max_ = err
             count += 1
 
-        print("all the errors", errors)
+        # print("all the errors", errors)
         i = errors.index(max_)
-        print("index of big error:", i)
+        # print("index of big error:", i)
         self.errorBoolean[i] = True
-        print("ERROR BOOLEAN LIST: ",self.errorBoolean)
-        print("A before", A)
-        print("B before", B)
+        # print("ERROR BOOLEAN LIST: ",self.errorBoolean)
+        # print("A before", A)
+        # print("B before", B)
         A.pop(2 * i)
         A.pop(2 * i)
 
@@ -332,11 +337,11 @@ class Light:
         B.pop(2 * i)
 
 
-        print("A after", A)
-        print("B after", B)
+        # print("A after", A)
+        # print("B after", B)
 
         self.lightpos(A, B)
-        print("\nL now", self.lightpos(A, B))
+        # print("\nL now", self.lightpos(A, B))
 
 
 
@@ -379,7 +384,7 @@ class DetectHoughCircles:
             # Convert the (x, y) coordinates and radius of the circles to integers
             self.circles = np.round(self.circles[0, :]).astype("int")
 
-        print("Final self.circles", self.circles)
+        # print("Final self.circles", self.circles)
         return self.circles
 
 
@@ -440,7 +445,7 @@ class DetectHighlights:
 
     # Floodfills around given point to find blob of highlight
     def floodFill(self, x, y):
-        print("FLOODFILLING!")
+        # print("FLOODFILLING!")
         count = 0
         roi_count = 0 # ROI index for moved point
         iroi = []
@@ -559,7 +564,7 @@ class Ellipse(QGraphicsRectItem):
         self.angle = angle
         self.hx = hx
         self.hy = hy
-        print('ANGLE: ', self.angle)
+        # print('ANGLE: ', self.angle)
         self.setTransformOriginPoint(cx, cy)
         self.setRotation(self.angle)
 
@@ -1149,7 +1154,7 @@ class PhotoViewer(QGraphicsView):
             # Deletes item if selected and pressed 'backspace'
             if event.key() == Qt.Key_Backspace:
                 location = self._scene.itemAt(self._x,self._y, deviceTransform)
-                print('Location of deleted item: ', self._x, self._y)
+                # print('Location of deleted item: ', self._x, self._y)
                 if location != self._photo:
                     self._scene.removeItem(location)
 
@@ -1304,7 +1309,7 @@ class Window(QWidget):
         # Check to see if the balls have already been detected
         if self.btnBallInfo.text() == "Refresh detection":
             self.redetectBallInfo()
-            print("BALL INFO BUTTON PRESSED")
+            # print("BALL INFO BUTTON PRESSED")
             return
 
         mirror_circle = []
@@ -1321,7 +1326,7 @@ class Window(QWidget):
     #redetects the outlines of the mirrored spheres in case not all were detected
     def redetectBallInfo(self):
         r = 0
-        print("REDETECTION WAS SELECTED")
+        # print("REDETECTION WAS SELECTED")
         new_coord = [] # New ball coordinates to display
         fixed_coord = [] # Adjusted ball coordinates
         old_coord = self.getBallCoord() # Old ball coordinates
@@ -1334,7 +1339,7 @@ class Window(QWidget):
 
         if r != 0:
             redetected_circles = DetectHoughCircles(self.img_filename[0], self.img_width, self.img_height).detect(r)
-            print("R is not equal to 0")
+            # print("R is not equal to 0")
             # If redetecting using Hough Circle works, add coordinates to mirror_circles
             if redetected_circles is not None and len(redetected_circles) > 17: #>16?
                 for (_x, _y, _r) in redetected_circles:
@@ -1377,7 +1382,7 @@ class Window(QWidget):
 
         # If pressed button by mistake
         else:
-            print("BUTTON PRESSED BY MISTAKE")
+            # print("BUTTON PRESSED BY MISTAKE")
             for (x, y, r) in old_coord:
                 item = Ball(x - r, y - r, 2*r, 2*r)
                 self.viewer._scene.addItem(item)
@@ -1424,7 +1429,7 @@ class Window(QWidget):
 
     #Checks to see which highlights are shifted and redects the center of the highlights using floodfill method
     def redetectHLInfo(self):
-        print("REDETECT HIGHLIGHTS")
+        # print("REDETECT HIGHLIGHTS")
         for item in self.viewer._scene.items():
             if item != self.viewer._photo:
                 #sX, sY = item.shift()
@@ -1463,12 +1468,12 @@ class Window(QWidget):
         for [x, y, MA, ma] in points:
             angle = angles[i]
             hx, hy = highlight_pos[i][0], highlight_pos[i][1]
-            print('\nLTopLeft Point',x, y )
+            # print('\nLTopLeft Point',x, y )
             #hl = item.hl_pos()
             #self.viewer._scene.addItem(hl)
             item = Ellipse(x, y, MA, ma)
             x1, y1= item.coordinates()[0], item.coordinates()[1]
-            print('\nCenter Point', x1, y1)
+            # print('\nCenter Point', x1, y1)
             self.viewer._scene.addItem(item)
             item.set_angle(angle, hx, hy)
             i+=1
