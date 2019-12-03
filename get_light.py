@@ -53,8 +53,7 @@ def find_light(arr_xyr, arr_hl):
         d = math.sqrt(dx*dx + dy*dy)
         theta = math.asin(d/r)
         phi = (math.pi/2) - (2*theta)
-        # negate dz so that it's sign is right when the entire vector is negated
-        dz = d * math.tan(phi) * -1
+        dz = d * math.tan(phi)
 
         l = np.array([dx, dy, dz])
         l = -l/np.linalg.norm(l)
