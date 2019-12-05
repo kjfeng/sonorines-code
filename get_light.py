@@ -56,7 +56,7 @@ def find_light(arr_xyr, arr_hl):
         dz = d * math.tan(phi)
 
         l = np.array([dx, dy, dz])
-        l = -l/np.linalg.norm(l)
+        l = l/np.linalg.norm(l)
         lightVec.append(l)
 
     return lightVec
@@ -98,6 +98,7 @@ def get_medoid(vectors):
 def main(argv):
     arr_xyr, arr_hl = read_csv_file()
     light_vectors = find_light(arr_xyr, arr_hl)
+    # print(light_vectors)
     light_medoid = get_medoid(light_vectors)
     print(light_medoid)
 
